@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Barbeiro | Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #121212; color: #f5f5f5; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { max-width: 600px; width: 100%; background: #1e1e1e; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #333; }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 12px; }
+        h1 { font-size: 1.3rem; color: #fff; }
+        .btn-sair { background: #ff5252; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .btn-sair:hover { background: #ff1744; }
+
+        .filter-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 6px; color: #ccc; }
+        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 1rem; }
+        input:focus { outline: none; border-color: #00e676; }
+
+        .agendamentos-list { display: flex; flex-direction: column; gap: 12px; }
+        .card-agendamento { background: #252525; border: 1px solid #444; border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .card-info h3 { font-size: 1rem; color: #00e676; margin-bottom: 4px; }
+        .card-info p { font-size: 0.85rem; color: #ccc; margin-bottom: 2px; }
+        
+        .btn-excluir { background: transparent; border: 1px solid #ff5252; color: #ff5252; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .btn-excluir:hover { background: #ff5252; color: #fff; }
+
+        .sem-dados { text-align: center; color: #777; font-size: 0.9rem; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <h1>Painel do Barbeiro</h1>
+        <button onclick="sairAdmin()" class="btn-sair">Sair</button>
+    </div>
+
+    <div class="filter-group">
+        <label for="filtro-data">Filtrar por Data</label>
+        <input type="date" id="filtro-data" onchange="carregarAgendamentos()">
+    </div>
+
+    <div id="lista-agendamentos" class="agendamentos-list">
+        <p class="sem-dados">A carregar agendamentos...</p>
+    </div>
+</div>
+
+<script>
+    // PROTEÇÃO DE ACESSO: Se não passou pela senha no index, expulsa de volta!
+    if (sessionStorage.getItem('barbearia_auth') !== 'true') {
+        alert('Acesso restrito! Por favor, faça login na página inicial.');
+        window.location.href = 'index.html';
+    }
+
+    const SUPABASE_URL = 'https://twfpefjuwggktkyvqwhc.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_uxHpeu2SOxPef98adeAZMw_Hdlt9yFE';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Define a data de hoje por predefinição no filtro
+    const hoje = new Date().toISOString().split('T')[0];
+    document.getElementById('filtro-data').value = hoje;
+
+    async function carregarAgendamentos() {
+        const dataSelecionada = document.getElementById('filtro-data').value;
+        const container = document.getElementById('lista-agendamentos');
+        container.innerHTML = '<p class="sem-dados">A procurar agendamentos...</p>';
+
+        const { data, error } = await _supabase
+            .from('agendamentos')
+            .select('*')
+            .order('data_horario', { ascending: true });
+
+        if (error) {
+            container.innerHTML = '<p class="sem-dados" style="color:#ff5252;">Erro ao carregar dados.</p>';
+            console.error(error);
+            return;
+        }
+
+        // Filtra os agendamentos correspondentes ao dia selecionado
+        const filtrados = data.filter(item => item.data_horario.startsWith(dataSelecionada));
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<p class="sem-dados">Nenhum agendamento para esta data.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        filtrados.forEach(item => {
+            const hora = item.data_horario.split('T')[1].substring(0, 5);
+            const servicosStr = Array.isArray(item.servicos_lista) ? item.servicos_lista.join(', ') : 'Serviço padrão';
+
+            container.innerHTML += `
+                <div class="card-agendamento">
+                    <div class="card-info">
+                        <h3>🕒 ${hora} — ${item.cliente_nome}</h3>
+                        <p>📱 WhatsApp: ${item.cliente_whatsapp}</p>
+                        <p>✂️ Serviço(s): ${servicosStr}</p>
+                    </div>
+                    <button class="btn-excluir" onclick="apagarAgendamento(${item.id})">Cancelar</button>
+                </div>
+            `;
+        });
+    }
+
+    async function apagarAgendamento(id) {
+        if (confirm('Tem certeza que deseja cancelar/remover este agendamento?')) {
+            const { error } = await _supabase.from('agendamentos').delete().eq('id', id);
+            if (error) {
+                alert('Erro ao apagar: ' + error.message);
+            } else {
+                carregarAgendamentos();
+            }
+        }
+    }
+
+    function sairAdmin() {
+        sessionStorage.removeItem('barbearia_auth');
+        window.location.href = 'index.html';
+    }
+
+    carregarAgendamentos();
+</script>
+
+</body>
+</html>

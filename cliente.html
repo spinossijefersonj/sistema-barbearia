@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento | Barbearia Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #121212; color: #f5f5f5; display: flex; flex-direction: column; min-height: 100vh; align-items: center; justify-content: space-between; padding: 20px; }
+        .container { max-width: 450px; width: 100%; background: #1e1e1e; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #333; position: relative; }
+        
+        /* Botão para voltar ao início */
+        .btn-voltar { display: inline-block; margin-bottom: 16px; color: #aaa; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
+        .btn-voltar:hover { color: #00e676; }
+
+        /* Estilos da Logo Embutida */
+        .logo-container { text-align: center; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; }
+        .logo-svg-box { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #00e676; background: #2a2a2a; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; box-shadow: 0 0 12px rgba(0,230,118,0.2); overflow: hidden; }
+
+        h1 { font-size: 1.4rem; text-align: center; margin-bottom: 4px; color: #fff; letter-spacing: 1px; }
+        p.subtitle { text-align: center; font-size: 0.85rem; color: #aaa; margin-bottom: 24px; }
+        .form-group { margin-bottom: 16px; position: relative; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 6px; color: #ccc; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 1rem; }
+        input:focus, select:focus { outline: none; border-color: #00e676; }
+        
+        /* Dropdown customizado de Serviços */
+        .dropdown-select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .dropdown-select:hover { border-color: #666; }
+        .dropdown-content { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #222; border: 1px solid #444; border-radius: 8px; margin-top: 4px; max-height: 200px; overflow-y: auto; z-index: 10; box-shadow: 0 8px 16px rgba(0,0,0,0.4); padding: 8px; }
+        .dropdown-content.active { display: block; }
+        
+        .services-list { display: flex; flex-direction: column; gap: 6px; }
+        .service-item { display: flex; align-items: center; gap: 10px; background: #2a2a2a; border: 1px solid #444; padding: 10px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
+        .service-item:hover { background: #333; }
+        .service-item input { width: 16px; height: 16px; cursor: pointer; accent-color: #00e676; }
+
+        /* Grid de Horários */
+        .time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+        .slot-btn { padding: 10px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #fff; cursor: pointer; text-align: center; font-size: 0.9rem; }
+        .slot-btn.selected { background: #00e676; color: #121212; font-weight: bold; border-color: #00e676; }
+        .slot-btn.disabled { background: #1a1a1a; color: #555; border-color: #222; cursor: not-allowed; text-decoration: line-through; }
+
+        button.submit-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #00e676; color: #121212; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 16px; }
+        button.submit-btn:hover { background: #00c853; }
+        
+        footer { margin-top: 30px; text-align: center; font-size: 0.8rem; color: #777; }
+        footer a { color: #00e676; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="btn-voltar">← Voltar ao Início</a>
+
+    <div class="logo-container">
+        <div class="logo-svg-box">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="18" r="3"></circle>
+                <line x1="8.5" y1="15.5" x2="15.5" y2="8.5"></line>
+                <line x1="15.5" y1="15.5" x2="8.5" y2="8.5"></line>
+                <path d="M12 3v5"></path>
+                <path d="M9 5h6"></path>
+            </svg>
+        </div>
+        <h1>BARBEARIA DEMO</h1>
+    </div>
+
+    <p class="subtitle">Agende seu horário com praticidade</p>
+
+    <form id="booking-form">
+        <div class="form-group">
+            <label for="nome">Seu Nome</label>
+            <input type="text" id="nome" placeholder="Ex: Carlos Andrade" required>
+        </div>
+
+        <div class="form-group">
+            <label for="whatsapp">Seu WhatsApp (com DDD)</label>
+            <input type="tel" id="whatsapp" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)" required>
+        </div>
+
+        <div class="form-group">
+            <label>Serviços Desejados</label>
+            <div class="dropdown-select" id="dropdown-btn" onclick="toggleDropdown(event)">
+                <span id="dropdown-text">Selecione os serviços...</span>
+                <span>▼</span>
+            </div>
+            <div class="dropdown-content" id="services-container">
+                <span style="font-size: 0.85rem; color: #777; padding: 4px;">A carregar serviços...</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="data">Data</label>
+            <input type="date" id="data" required>
+        </div>
+
+        <div class="form-group">
+            <label>Horário Disponível</label>
+            <div class="time-slots" id="slots-container">
+                <p style="grid-column: span 3; font-size: 0.8rem; color: #777;">Selecione uma data acima</p>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Finalizar Agendamento</button>
+    </form>
+</div>
+
+<footer>
+    <p>Desenvolvido por <a href="#" target="_blank">Green Code</a></p>
+</footer>
+
+<script>
+    const SUPABASE_URL = 'https://twfpefjuwggktkyvqwhc.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_uxHpeu2SOxPef98adeAZMw_Hdlt9yFE';
+    const WHATSAPP_BARBEIRO = '55199828818003';
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let horarioSelecionado = null;
+
+    document.getElementById('data').min = new Date().toISOString().split('T')[0];
+
+    function toggleDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('services-container').classList.toggle('active');
+    }
+
+    window.addEventListener('click', () => {
+        document.getElementById('services-container').classList.remove('active');
+    });
+
+    function atualizarTextoDropdown() {
+        const checkboxes = document.querySelectorAll('input[name="servicos"]:checked');
+        const dropdownText = document.getElementById('dropdown-text');
+        
+        if (checkboxes.length === 0) {
+            dropdownText.innerText = 'Selecione os serviços...';
+            dropdownText.style.color = '#fff';
+        } else if (checkboxes.length === 1) {
+            const nomeServico = checkboxes[0].getAttribute('data-nome');
+            dropdownText.innerText = `1 selecionado: ${nomeServico}`;
+            dropdownText.style.color = '#00e676';
+        } else {
+            dropdownText.innerText = `${checkboxes.length} serviços selecionados`;
+            dropdownText.style.color = '#00e676';
+        }
+    }
+
+    function mascaraTelefone(input) {
+        let v = input.value.replace(/\D/g, ''); 
+        if (v.length > 11) v = v.substring(0, 11); 
+
+        if (v.length > 10) {
+            v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (v.length > 5) {
+            v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (v.length > 2) {
+            v = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+        } else if (v.length > 0) {
+            v = v.replace(/^(\d*)/, '($1');
+        }
+        input.value = v;
+    }
+
+    async function carregarServicos() {
+        const { data, error } = await _supabase.from('servicos').select('*').order('id', { ascending: true });
+        const container = document.getElementById('services-container');
+        
+        if (error) {
+            console.error('Erro ao carregar serviços:', error);
+            container.innerHTML = '<span style="color: #ff5252; font-size: 0.85rem;">Erro ao carregar serviços</span>';
+            return;
+        }
+
+        container.innerHTML = '<div class="services-list"></div>';
+        const listDiv = container.querySelector('.services-list');
+
+        if (data) {
+            data.forEach(s => {
+                listDiv.innerHTML += `
+                    <label class="service-item" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="servicos" value="${s.id}" data-nome="${s.nome}" data-preco="${s.preco}" onchange="atualizarTextoDropdown()">
+                        <span>${s.nome} — R$ ${Number(s.preco).toFixed(2)}</span>
+                    </label>
+                `;
+            });
+        }
+    }
+
+    document.getElementById('data').addEventListener('change', async () => {
+        const dataSelecionada = document.getElementById('data').value;
+        const container = document.getElementById('slots-container');
+        container.innerHTML = '<p style="grid-column: span 3; font-size: 0.8rem; color: #aaa;">A verificar horários...</p>';
+        horarioSelecionado = null;
+
+        const { data: agendamentosExistentes, error } = await _supabase
+            .from('agendamentos')
+            .select('data_horario');
+
+        const horariosOcupados = [];
+        if (!error && agendamentosExistentes) {
+            agendamentosExistentes.forEach(item => {
+                if (item.data_horario.startsWith(dataSelecionada)) {
+                    const horaMinuto = item.data_horario.split('T')[1].substring(0, 5);
+                    horariosOcupados.push(horaMinuto);
+                }
+            });
+        }
+
+        container.innerHTML = '';
+        const horarios = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+        
+        horarios.forEach(h => {
+            const btn = document.createElement('div');
+            btn.className = 'slot-btn';
+            btn.innerText = h;
+
+            if (horariosOcupados.includes(h)) {
+                btn.classList.add('disabled');
+                btn.title = 'Horário já ocupado';
+            } else {
+                btn.onclick = () => {
+                    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    horarioSelecionado = h;
+                };
+            }
+            container.appendChild(btn);
+        });
+    });
+
+    document.getElementById('booking-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const checkboxes = document.querySelectorAll('input[name="servicos"]:checked');
+        if (checkboxes.length === 0) {
+            alert('Por favor, selecione pelo menos um serviço!');
+            return;
+        }
+
+        if (!horarioSelecionado) {
+            alert('Por favor, selecione um horário disponível!');
+            return;
+        }
+
+        const nome = document.getElementById('nome').value;
+        const whatsapp = document.getElementById('whatsapp').value;
+        const data = document.getElementById('data').value;
+        const dataHorarioIso = `${data}T${horarioSelecionado}:00`;
+
+        const servicosIds = [];
+        const nomesServicos = [];
+        checkboxes.forEach(cb => {
+            servicosIds.push(parseInt(cb.value));
+            nomesServicos.push(cb.getAttribute('data-nome'));
+        });
+
+        const { error } = await _supabase.from('agendamentos').insert([{
+            cliente_nome: nome,
+            cliente_whatsapp: whatsapp,
+            servico_id: servicosIds[0], 
+            servicos_lista: nomesServicos, 
+            data_horario: dataHorarioIso
+        }]);
+
+        if (error) {
+            alert('Erro ao agendar: ' + error.message);
+        } else {
+            const dataFormatada = data.split('-').reverse().join('/');
+            const msg = `*BARBEARIA DEMO*%0A%0A*Cliente:* ${nome}%0A*WhatsApp:* ${whatsapp}%0A*Serviço(s):* ${nomesServicos.join(', ')}%0A*Data:* ${dataFormatada}%0A*Horário:* ${horarioSelecionado}`;
+
+            window.open(`https://api.whatsapp.com/send?phone=${WHATSAPP_BARBEIRO}&text=${msg}`, '_blank');
+            
+            document.getElementById('booking-form').reset();
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+            horarioSelecionado = null;
+            document.getElementById('dropdown-text').innerText = 'Selecione os serviços...';
+            document.getElementById('dropdown-text').style.color = '#fff';
+            document.getElementById('slots-container').innerHTML = '<p style="grid-column: span 3; font-size: 0.8rem; color: #777;">Selecione uma data acima</p>';
+        }
+    });
+
+    carregarServicos();
+</script>
+
+</body>
+</html>

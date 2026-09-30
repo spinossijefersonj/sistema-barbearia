@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbearia Demo | Acesso</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #121212; color: #f5f5f5; display: flex; flex-direction: column; min-height: 100vh; align-items: center; justify-content: space-between; padding: 20px; }
+        .container { max-width: 450px; width: 100%; background: #1e1e1e; padding: 30px 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #333; text-align: center; margin: auto; }
+        
+        .logo-svg-box { width: 90px; height: 90px; border-radius: 50%; border: 2px solid #00e676; background: #2a2a2a; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 0 0 12px rgba(0,230,118,0.2); }
+        h1 { font-size: 1.5rem; margin-bottom: 6px; color: #fff; letter-spacing: 1px; }
+        p.subtitle { font-size: 0.9rem; color: #aaa; margin-bottom: 30px; }
+
+        .btn-opcao { display: block; width: 100%; padding: 16px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; text-decoration: none; transition: 0.2s; margin-bottom: 14px; text-align: center; }
+        .btn-cliente { background: #00e676; color: #121212; border: none; }
+        .btn-cliente:hover { background: #00c853; }
+        
+        .btn-admin { background: transparent; color: #ccc; border: 1px solid #555; }
+        .btn-admin:hover { background: #2a2a2a; color: #fff; border-color: #777; }
+
+        /* Caixa de Senha Oculta */
+        #auth-box { display: none; margin-top: 20px; background: #242424; padding: 16px; border-radius: 8px; border: 1px solid #444; text-align: left; }
+        #auth-box label { display: block; font-size: 0.85rem; margin-bottom: 6px; color: #ccc; }
+        #auth-box input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #555; background: #1e1e1e; color: #fff; font-size: 1rem; margin-bottom: 10px; }
+        #auth-box input:focus { outline: none; border-color: #00e676; }
+        .btn-entrar { width: 100%; padding: 10px; background: #00e676; color: #121212; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .erro-senha { color: #ff5252; font-size: 0.8rem; margin-top: 6px; display: none; text-align: center; }
+
+        footer { margin-top: 20px; text-align: center; font-size: 0.8rem; color: #777; }
+        footer a { color: #00e676; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo-svg-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="45" height="45" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="18" r="3"></circle>
+            <line x1="8.5" y1="15.5" x2="15.5" y2="8.5"></line>
+            <line x1="15.5" y1="15.5" x2="8.5" y2="8.5"></line>
+            <path d="M12 3v5"></path>
+            <path d="M9 5h6"></path>
+        </svg>
+    </div>
+    
+    <h1>BARBEARIA DEMO</h1>
+    <p class="subtitle">Selecione o perfil de acesso</p>
+
+    <a href="cliente.html" class="btn-opcao btn-cliente">📅 Sou Cliente (Agendar Horário)</a>
+    <button onclick="mostrarLoginAdmin()" class="btn-opcao btn-admin">⚙️ Área do Barbeiro (Admin)</button>
+
+    <!-- Secção de Senha do Barbeiro -->
+    <div id="auth-box">
+        <label for="senha-admin">Digite a Senha de Acesso:</label>
+        <input type="password" id="senha-admin" placeholder="Palavra-passe">
+        <button onclick="validarSenha()" class="btn-entrar">Entrar no Painel</button>
+        <p id="erro-msg" class="erro-senha">Senha incorreta!</p>
+    </div>
+</div>
+
+<footer>
+    <p>Desenvolvido por <a href="#" target="_blank">Green Code</a></p>
+</footer>
+
+<script>
+    // Podes alterar a senha padrão aqui ("barbearia123" por exemplo)
+    const SENHA_MESTRE = "admin123";
+
+    function mostrarLoginAdmin() {
+        const box = document.getElementById('auth-box');
+        box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('senha-admin').focus();
+    }
+
+    function validarSenha() {
+        const digitada = document.getElementById('senha-admin').value;
+        const erroMsg = document.getElementById('erro-msg');
+
+        if (digitada === SENHA_MESTRE) {
+            // Guarda uma chave de sessão temporária para permitir a entrada no admin
+            sessionStorage.setItem('barbearia_auth', 'true');
+            window.location.href = 'admin.html';
+        } else {
+            erroMsg.style.display = 'block';
+            document.getElementById('senha-admin').value = '';
+        }
+    }
+</script>
+
+</body>
+</html>
