@@ -14,6 +14,11 @@
         .btn-voltar { display: inline-block; margin-bottom: 16px; color: #aaa; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
         .btn-voltar:hover { color: #00e676; }
 
+        /* Abas de navegação interna */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #aaa; font-size: 0.85rem; cursor: pointer; text-align: center; transition: 0.2s; }
+        .tab-btn.active { background: #00e676; color: #121212; font-weight: bold; border-color: #00e676; }
+
         /* Estilos da Logo Embutida */
         .logo-container { text-align: center; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; }
         .logo-svg-box { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #00e676; background: #2a2a2a; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; box-shadow: 0 0 12px rgba(0,230,118,0.2); overflow: hidden; }
@@ -44,6 +49,13 @@
 
         button.submit-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #00e676; color: #121212; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 16px; }
         button.submit-btn:hover { background: #00c853; }
+
+        /* Estilos da seção de Consulta */
+        .section-view { display: none; }
+        .section-view.active { display: block; }
+        .appointment-card { background: #252525; border: 1px solid #383838; padding: 14px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; }
+        .appointment-card p { margin-bottom: 6px; color: #ddd; }
+        .appointment-card p strong { color: #00e676; }
         
         footer { margin-top: 30px; text-align: center; font-size: 0.8rem; color: #777; }
         footer a { color: #00e676; text-decoration: none; font-weight: bold; }
@@ -68,44 +80,66 @@
         <h1>BARBEARIA DEMO</h1>
     </div>
 
-    <p class="subtitle">Agende seu horário com praticidade</p>
+    <!-- Abas para alternar entre Agendar e Consultar -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="tab-agendar" onclick="alternarAba('agendar')">Fazer Agendamento</button>
+        <button class="tab-btn" id="tab-consultar" onclick="alternarAba('consultar')">Consultar Meus Horários</button>
+    </div>
 
-    <form id="booking-form">
-        <div class="form-group">
-            <label for="nome">Seu Nome</label>
-            <input type="text" id="nome" placeholder="Ex: Carlos Andrade" required>
-        </div>
-
-        <div class="form-group">
-            <label for="whatsapp">Seu WhatsApp (com DDD)</label>
-            <input type="tel" id="whatsapp" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)" required>
-        </div>
-
-        <div class="form-group">
-            <label>Serviços Desejados</label>
-            <div class="dropdown-select" id="dropdown-btn" onclick="toggleDropdown(event)">
-                <span id="dropdown-text">Selecione os serviços...</span>
-                <span>▼</span>
+    <!-- SEÇÃO 1: AGENDAMENTO -->
+    <div id="view-agendar" class="section-view active">
+        <p class="subtitle">Agende seu horário com praticidade</p>
+        <form id="booking-form">
+            <div class="form-group">
+                <label for="nome">Seu Nome</label>
+                <input type="text" id="nome" placeholder="Ex: Carlos Andrade" required>
             </div>
-            <div class="dropdown-content" id="services-container">
-                <span style="font-size: 0.85rem; color: #777; padding: 4px;">A carregar serviços...</span>
+
+            <div class="form-group">
+                <label for="whatsapp">Seu WhatsApp (com DDD)</label>
+                <input type="tel" id="whatsapp" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)" required>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="data">Data</label>
-            <input type="date" id="data" required>
-        </div>
-
-        <div class="form-group">
-            <label>Horário Disponível</label>
-            <div class="time-slots" id="slots-container">
-                <p style="grid-column: span 3; font-size: 0.8rem; color: #777;">Selecione uma data acima</p>
+            <div class="form-group">
+                <label>Serviços Desejados</label>
+                <div class="dropdown-select" id="dropdown-btn" onclick="toggleDropdown(event)">
+                    <span id="dropdown-text">Selecione os serviços...</span>
+                    <span>▼</span>
+                </div>
+                <div class="dropdown-content" id="services-container">
+                    <span style="font-size: 0.85rem; color: #777; padding: 4px;">A carregar serviços...</span>
+                </div>
             </div>
-        </div>
 
-        <button type="submit" class="submit-btn">Finalizar Agendamento</button>
-    </form>
+            <div class="form-group">
+                <label for="data">Data</label>
+                <input type="date" id="data" required>
+            </div>
+
+            <div class="form-group">
+                <label>Horário Disponível</label>
+                <div class="time-slots" id="slots-container">
+                    <p style="grid-column: span 3; font-size: 0.8rem; color: #777;">Selecione uma data acima</p>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Finalizar Agendamento</button>
+        </form>
+    </div>
+
+    <!-- SEÇÃO 2: CONSULTA DE AGENDAMENTOS -->
+    <div id="view-consultar" class="section-view">
+        <p class="subtitle">Consulte seus horários marcados</p>
+        <div class="form-group">
+            <label for="whatsapp-busca">Digite seu WhatsApp</label>
+            <input type="tel" id="whatsapp-busca" placeholder="(19) 99999-9999" maxlength="15" oninput="mascaraTelefone(this)">
+        </div>
+        <button type="button" class="submit-btn" onclick="buscarAgendamentos()">Buscar Agendamentos</button>
+
+        <div id="resultado-busca" style="margin-top: 16px;">
+            <p style="font-size: 0.85rem; color: #777; text-align: center;">Insira seu número para ver os agendamentos ativos.</p>
+        </div>
+    </div>
 </div>
 
 <footer>
@@ -122,13 +156,29 @@
 
     document.getElementById('data').min = new Date().toISOString().split('T')[0];
 
+    function alternarAba(aba) {
+        document.getElementById('view-agendar').classList.remove('active');
+        document.getElementById('view-consultar').classList.remove('active');
+        document.getElementById('tab-agendar').classList.remove('active');
+        document.getElementById('tab-consultar').classList.remove('active');
+
+        if (aba === 'agendar') {
+            document.getElementById('view-agendar').classList.add('active');
+            document.getElementById('tab-agendar').classList.add('active');
+        } else {
+            document.getElementById('view-consultar').classList.add('active');
+            document.getElementById('tab-consultar').classList.add('active');
+        }
+    }
+
     function toggleDropdown(e) {
         e.stopPropagation();
         document.getElementById('services-container').classList.toggle('active');
     }
 
     window.addEventListener('click', () => {
-        document.getElementById('services-container').classList.remove('active');
+        const dropdown = document.getElementById('services-container');
+        if(dropdown) dropdown.classList.remove('active');
     });
 
     function atualizarTextoDropdown() {
@@ -281,6 +331,53 @@
             document.getElementById('slots-container').innerHTML = '<p style="grid-column: span 3; font-size: 0.8rem; color: #777;">Selecione uma data acima</p>';
         }
     });
+
+    async function buscarAgendamentos() {
+        const whatsappBusca = document.getElementById('whatsapp-busca').value.trim();
+        const resultadoDiv = document.getElementById('resultado-busca');
+
+        if (!whatsappBusca) {
+            alert('Por favor, digite o número do WhatsApp.');
+            return;
+        }
+
+        resultadoDiv.innerHTML = '<p style="font-size: 0.85rem; color: #aaa; text-align: center;">Buscando agendamentos...</p>';
+
+        const { data, error } = await _supabase
+            .from('agendamentos')
+            .select('*')
+            .eq('cliente_whatsapp', whatsappBusca)
+            .order('data_horario', { ascending: true });
+
+        if (error) {
+            resultadoDiv.innerHTML = '<p style="font-size: 0.85rem; color: #ff5252; text-align: center;">Erro ao buscar agendamentos.</p>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            resultadoDiv.innerHTML = '<p style="font-size: 0.85rem; color: #ff5252; text-align: center;">Nenhum agendamento encontrado para este número.</p>';
+            return;
+        }
+
+        resultadoDiv.innerHTML = '';
+        data.forEach(ag => {
+            // Extrai a data e a hora diretamente da string do banco, evitando conversões indesejadas de fuso horário
+            const [dataPart, horaPart] = ag.data_horario.split('T');
+            const [ano, mes, dia] = dataPart.split('-');
+            const dataFmt = `${dia}/${mes}/${ano}`;
+            const horaFmt = horaPart ? horaPart.substring(0, 5) : '';
+            
+            const listaServicos = Array.isArray(ag.servicos_lista) ? ag.servicos_lista.join(', ') : 'Serviço padrão';
+
+            resultadoDiv.innerHTML += `
+                <div class="appointment-card">
+                    <p><strong>Cliente:</strong> ${ag.cliente_nome}</p>
+                    <p><strong>Data:</strong> ${dataFmt} às ${horaFmt}</p>
+                    <p><strong>Serviço(s):</strong> ${listaServicos}</p>
+                </div>
+            `;
+        });
+    }
 
     carregarServicos();
 </script>
