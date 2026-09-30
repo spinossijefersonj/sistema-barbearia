@@ -25,8 +25,9 @@
         .card-info h3 { font-size: 1rem; color: #00e676; margin-bottom: 4px; }
         .card-info p { font-size: 0.85rem; color: #ccc; margin-bottom: 2px; }
         
-        .btn-excluir { background: transparent; border: 1px solid #ff5252; color: #ff5252; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
-        .btn-excluir:hover { background: #ff5252; color: #fff; }
+        /* Botão Concluído com identidade visual verde */
+        .btn-concluir { background: transparent; border: 1px solid #00e676; color: #00e676; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s; }
+        .btn-concluir:hover { background: #00e676; color: #121212; }
 
         .sem-dados { text-align: center; color: #777; font-size: 0.9rem; padding: 20px; }
     </style>
@@ -50,7 +51,6 @@
 </div>
 
 <script>
-    // PROTEÇÃO DE ACESSO: Se não passou pela senha no index, expulsa de volta!
     if (sessionStorage.getItem('barbearia_auth') !== 'true') {
         alert('Acesso restrito! Por favor, faça login na página inicial.');
         window.location.href = 'index.html';
@@ -60,7 +60,6 @@
     const SUPABASE_KEY = 'sb_publishable_uxHpeu2SOxPef98adeAZMw_Hdlt9yFE';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Define a data de hoje por predefinição no filtro
     const hoje = new Date().toISOString().split('T')[0];
     document.getElementById('filtro-data').value = hoje;
 
@@ -80,7 +79,6 @@
             return;
         }
 
-        // Filtra os agendamentos correspondentes ao dia selecionado
         const filtrados = data.filter(item => item.data_horario.startsWith(dataSelecionada));
 
         if (filtrados.length === 0) {
@@ -100,17 +98,17 @@
                         <p>📱 WhatsApp: ${item.cliente_whatsapp}</p>
                         <p>✂️ Serviço(s): ${servicosStr}</p>
                     </div>
-                    <button class="btn-excluir" onclick="apagarAgendamento(${item.id})">Cancelar</button>
+                    <button class="btn-concluir" onclick="concluirAgendamento(${item.id})">Concluído</button>
                 </div>
             `;
         });
     }
 
-    async function apagarAgendamento(id) {
-        if (confirm('Tem certeza que deseja cancelar/remover este agendamento?')) {
+    async function concluirAgendamento(id) {
+        if (confirm('Marcar este atendimento como concluído? O horário será liberado.')) {
             const { error } = await _supabase.from('agendamentos').delete().eq('id', id);
             if (error) {
-                alert('Erro ao apagar: ' + error.message);
+                alert('Erro ao atualizar: ' + error.message);
             } else {
                 carregarAgendamentos();
             }
